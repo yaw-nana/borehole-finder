@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Borehole Finder</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.css">
+    <link rel="stylesheet" href="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.css">
+    <link rel="stylesheet" href="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.css">
+    <link rel="stylesheet" href="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.js"></script>
+    <script src="https://cdn.osmbuildings.org/classic/0.2.2b/OSMBuildings-Leaflet.js"></script>
+    <script src="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.js"></script>
+    <script src="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="color_location.js"></script>
+    <script src="try.js"></script>
+    <script src="Shapefile_from_Qgis/trial.js"></script>
+    <script src="Shapefile_from_Qgis/reproject.js"></script>
+    <script src="Shapefile_from_Qgis/qq.js"></script>
+    <script src="new_color.js"></script>
+    <script src="Shapefile_from_Qgis/evans.js"></script>
+    <script src="Shapefile_from_Qgis/Hostel.js"></script>
+    <script src="Borehole.js"></script>
+    <script src="Shapefile_from_Qgis/Boundary.js"></script>
+    
+    <script src="now.js"></script>
+    <style>
+        #map {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        var map = L.map('map');
+
+        // Base maps
+        var baseMaps = {
+            "MapTiler Streets": L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=tgfbUIProjNsMsqtjjZO', {
+                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
+            }).addTo(map),
+
+            "Stadia Alidade Satellite": L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
+                maxZoom: 20,
+                attribution: '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                ext: 'jpg'
+            }),
+
+            "OpenStreetMap DE": L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }),
+
+            "OpenStreetMap CH": L.tileLayer('https://tile.osm.ch/switzerland/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                bounds: [
+                    [45, 5],
+                    [48, 11]
+                ]
+            }),
+
+            "Google Satellite": L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+            })
+        };
+
+        // Adding baseMaps to the map
+        L.control.layers(baseMaps).addTo(map);
+
+        var osmb = new OSMBuildings(map).load('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json');
+
+        // Define the boundary layer and add it to the map
+        var boundary = L.geoJSON(boundary, {
+            style: function (feature) {
+                return {
+                    color: '#000000',
+                    weight: 2,
+                    fillOpacity: 0
+                };
+            }
+        }).addTo(map);
+
+        // Fit the map to the boundary layer
+        map.fitBounds(boundary.getBounds());
+
+        L.control.locate().addTo(map);
+
+        // Adding boreholes with hover effect
+        var boreholeLayer = L.geoJSON(borehole, {
+            onEachFeature: function (feature, layer) {
+                // Create a tooltip showing the name and condition
+                var tooltipContent = feature.properties.Location + '<br>condition: ' + feature.properties.condition;
+                layer.bindTooltip(tooltipContent, { permanent: false, direction: 'top' });
+
+                // Optional: add a popup
+                layer.on('click', function () {
+                    layer.bindPopup(tooltipContent).openPopup();
+                });
+            }
+        }).addTo(map);
+
+       
+        var marker = L.marker([6.67537, -1.57242]).addTo(map);
+
+        // Function to handle routing
+        var routingControl = L.Routing.control({
+            waypoints: []
+        }).addTo(map);
+
+        // Function to update routing control
+        function updateRoute(start, end) {
+            routingControl.setWaypoints([
+                L.latLng(start.lat, start.lng),
+                L.latLng(end.lat, end.lng)
+            ]);
+        }
+
+        var searchControl; // Declare the search control variable outside the function
+        var userLocation; // Declare user location variable
+
+        // Get user's current location
+        map.locate({ watch: true, setView: true, maxZoom: 16 });
+
+        function onLocationFound(e) {
+            userLocation = e.latlng;
+
+            // Check if the search control already exists
+            if (!searchControl) {
+                // Search control for boreholes
+                searchControl = new L.Control.Search({
+                    layer: boreholeLayer,
+                    propertyName: 'Location',
+                    zoom: 25,
+                    textPlaceholder: "Search for a Borehole"
+                });
+
+                searchControl.on('search:locationfound', function (e) {
+                    var boreholeLocation = e.latlng;
+                    updateRoute(userLocation, boreholeLocation);
+
+                    // Display properties of the searched borehole
+                    var properties = e.layer.feature.properties;
+                    var popupContent = 'Location: ' + properties.Location + '<br>Condition: ' + properties.condition;
+                    L.popup()
+                        .setLatLng(boreholeLocation)
+                        .setContent(popupContent)
+                        .openOn(map);
+                });
+
+                map.addControl(searchControl);
+            } else {
+                // Update route if searchControl already exists
+                var selectedFeature = searchControl.getSelectedFeature();
+                if (selectedFeature) {
+                    var boreholeLocation = selectedFeature.getLatLng();
+                    updateRoute(userLocation, boreholeLocation);
+                }
+            }
+        }
+
+        map.on('locationfound', onLocationFound);
+        map.on('locationerror', function(e) {
+            alert(e.message);
+        });
+
+        L.control.navbar({ position: "topright" }).addTo(map);
+    </script>
+</body>
+</html>

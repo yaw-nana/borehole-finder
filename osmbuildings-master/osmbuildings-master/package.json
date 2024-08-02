@@ -1,0 +1,22 @@
+{
+  "name": "osmbuildings-classic",
+  "description": "OSM Buildings Classic",
+  "version": "3.0.1",
+  "homepage": "https://osmbuildings.org",
+  "author": "@kekscom",
+  "contributors": [
+    "Jan Marsch <jama@keks.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kekscom/osmbuildings.git"
+  },
+  "scripts": {},
+  "dependencies": {
+    "qolor": "^2.3.3"
+  },
+  "devDependencies": {
+    "terser": "^4.6.7"
+  },
+  "optionalDependencies": {}
+}
