@@ -3,31 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webmap</title>
+    <title>Borehole Finder</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <link rel="stylesheet" href="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.css">
-    <link rel="stylesheet" href="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.css">
-    <link rel="stylesheet" href="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.css">
-    <link rel="stylesheet" href="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script src="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.js"></script>
-    <script src="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.js"></script>
-    <script src="https://cdn.osmbuildings.org/classic/0.2.2b/OSMBuildings-Leaflet.js"></script>
-    <script src="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.js"></script>
-    <script src="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-    <script src="color_location.js"></script>
-    <script src="try.js"></script>
-    <script src="Shapefile_from_Qgis/trial.js"></script>
-    <script src="Shapefile_from_Qgis/reproject.js"></script>
-    <script src="Shapefile_from_Qgis/qq.js"></script>
-    <script src="new_color.js"></script>
-    <script src="Shapefile_from_Qgis/evans.js"></script>
-    <script src="Shapefile_from_Qgis/Hostel.js"></script>
-    <script src="Borehole.js"></script>
-    <script src="Shapefile_from_Qgis/Boundary.js"></script>
-    <script src="now.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-search@2.9.8/dist/leaflet-search.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol@0.74.1/dist/L.Control.Locate.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@1.14.0/dist/Control.Geocoder.css" />
     <style>
         #map {
             position: absolute;
@@ -38,44 +19,25 @@
         }
     </style>
 </head>
-
 <body>
     <div id="map"></div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="https://unpkg.com/leaflet.locatecontrol@0.74.1/dist/L.Control.Locate.min.js"></script>
+    <script src="https://cdn.osmbuildings.org/classic/0.2.2b/OSMBuildings-Leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-search@2.9.8/dist/leaflet-search.min.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder@1.14.0/dist/Control.Geocoder.js"></script>
+    <script src="Borehole.js"></script>
+    <script src="Shapefile_from_Qgis/Boundary.js"></script>
+
     <script>
-        var map = L.map('map').setView([6.67537, -1.57242], 10);
-        L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=tgfbUIProjNsMsqtjjZO', {
-            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
-        }).addTo(map);
-
-        var StadiaAlidadeSatellite = L.tileLayer(
-            'https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
-                maxZoom: 20,
-                attribution: '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                ext: 'jpg'
-            });
-
-        var OpenStreetMapDE = L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
-            maxZoom: 18,
+        var map = L.map('map').setView([latitude, longitude], zoomLevel);
+        var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        });
-
-        var OpenStreetMap_CH = L.tileLayer('https://tile.osm.ch/switzerland/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            bounds: [
-                [45, 5],
-                [48, 11]
-            ]
         }).addTo(map);
 
-        var googleSat = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
-        }).addTo(map);
-
-        var osmb = new OSMBuildings(map).load('https://{s}.data.osmbuildings.org/0.2/anonymous/tile/{z}/{x}/{y}.json');
-
+        // Define the boundary layer and add it to the map
         var boundary = L.geoJSON(boundary, {
             style: function (feature) {
                 return {
@@ -86,50 +48,88 @@
             }
         }).addTo(map);
 
-        L.control.locate().addTo(map);
+        // Fit the map to the boundary layer
+        map.fitBounds(boundary.getBounds());
+
+        // Locate control
+        var locateControl = L.control.locate({
+            setView: 'always',
+            keepCurrentZoomLevel: true,
+            drawCircle: false,
+            locateOptions: {
+                maxZoom: 15,
+                enableHighAccuracy: true
+            }
+        }).addTo(map);
 
         // Adding boreholes with hover effect
         var boreholeLayer = L.geoJSON(borehole, {
             onEachFeature: function (feature, layer) {
-                // Create a tooltip showing the name and condition
-                var tooltipContent = feature.properties.Location + '<br>condition: ' + feature.properties.ondition;
+                var tooltipContent = feature.properties.Location + '<br>Condition: ' + feature.properties.condition;
                 layer.bindTooltip(tooltipContent, { permanent: false, direction: 'top' });
 
-                // Optional: add a popup
                 layer.on('click', function () {
                     layer.bindPopup(tooltipContent).openPopup();
                 });
             }
         }).addTo(map);
 
-        var marker = L.marker([6.67537, -1.57242]).addTo(map);
-
-        L.Routing.control({
-            waypoints: [
-                L.latLng(6.67537, -1.57242),
-                L.latLng(6.07537, -1.57242)
-            ]
-        }).addTo(map);
-
-        var basemaps = {
-            'Open street map': OpenStreetMapDE,
-            'Topo': StadiaAlidadeSatellite,
-            'Terrain': map,
-            'street': OpenStreetMap_CH,
-            'Google Satellite': googleSat
-        };
-
-        L.control.layers(basemaps).addTo(map);
-
-        const searchControl = new L.Control.Search({
+        var searchControl = new L.Control.Search({
             layer: boreholeLayer,
             propertyName: 'Location',
-            zoom: 25,
+            zoom: 15,
             textPlaceholder: "Search for a Borehole"
+        }).addTo(map);
+
+        L.control.navbar({ position: "topright" }).addTo(map);
+
+        var userLocation;
+        var searchLocation;
+
+        // Initialize the routing control
+        var routingControl = L.Routing.control({
+            waypoints: [],
+            routeWhileDragging: true,
+            createMarker: function(i, waypoint, n) {
+                return L.marker(waypoint.latLng, {
+                    draggable: false,
+                    bounceOnAdd: false,
+                    bounceOnAddOptions: {
+                        duration: 1000,
+                        height: 800,
+                        function() {
+                            (bindPopup(myPopup).openOn(map))
+                        }
+                    }
+                });
+            },
         });
 
-        map.addControl(searchControl);
-        L.control.navbar({ position: "topright" }).addTo(map);
+        // Add routing control when both locations are set
+        function updateRoute() {
+            if (userLocation && searchLocation) {
+                routingControl.setWaypoints([userLocation, searchLocation]).addTo(map);
+            } else if (userLocation) {
+                routingControl.setWaypoints([userLocation]).addTo(map);
+            }
+        }
+
+        // Event handler for Locate Control
+        map.on('locationfound', function(e) {
+            userLocation = e.latlng;
+            updateRoute();
+        });
+
+        // Event handler for Search Control
+        searchControl.on('search:locationfound', function(e) {
+            searchLocation = e.layer.getLatLng();
+            updateRoute();
+        });
+
+        // Start locating the user when Locate Control is clicked
+        locateControl.on('startactive', function() {
+            map.locate({setView: true, maxZoom: 15});
+        });
     </script>
 </body>
 </html>
