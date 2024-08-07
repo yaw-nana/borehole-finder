@@ -129,8 +129,8 @@
         });
 
         // Start locating the user when Locate Control is clicked
-        locateControl.on('startactive', function() {
-            map.locate({setView: true, maxZoom: 15});
+        map.on('locationfound', function(e) {
+            locateControl.start();
         });
     </script>
 </body>
