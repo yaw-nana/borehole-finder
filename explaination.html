@@ -11,36 +11,12 @@
     <link rel="stylesheet" href="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            font-family: Arial, sans-serif;
-        }
         #map {
-            height: 100%;
-            width: 100%;
-        }
-        .leaflet-control-container .leaflet-bar a {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-        }
-        .leaflet-tooltip {
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 5px;
-            font-size: 14px;
-        }
-        .leaflet-popup-content {
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        .leaflet-control-search {
-            background: #fff;
-            border: 1px solid #ccc;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
         }
     </style>
 </head>
@@ -58,7 +34,7 @@
     <script src="Shapefile_from_Qgis/Boundary.js"></script>
 
     <script>
-        var map = L.map('map').setView([latitude, longitude], zoomLevel); // Set initial view with appropriate latitude, longitude and zoomLevel
+        var map = L.map('map');
         var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
@@ -129,7 +105,7 @@
                     }
                 });
             },
-        });
+        }).addTo(map);
 
         // Add routing control when both locations are set
         function updateRoute() {
@@ -153,8 +129,8 @@
         });
 
         // Start locating the user when Locate Control is clicked
-        locateControl.on('startactive', function() {
-            map.locate({setView: true, maxZoom: 15});
+        map.on('locationfound', function(e) {
+            locateControl.start();
         });
     </script>
 </body>
