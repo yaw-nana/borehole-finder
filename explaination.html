@@ -18,6 +18,14 @@
             bottom: 0;
             left: 0;
         }
+
+        /* CSS for smaller screens */
+        @media (max-width: 768px) {
+            .leaflet-top.leaflet-right {
+                transform: scale(0.8); /* Adjust scale as needed */
+                transform-origin: top right; /* Keeps the top-right positioning */
+            }
+        }
     </style>
 </head>
 <body>
@@ -129,8 +137,8 @@
         });
 
         // Start locating the user when Locate Control is clicked
-        map.on('locationfound', function(e) {
-            locateControl.start();
+        locateControl.on('startactive', function() {
+            map.locate({setView: true, maxZoom: 15});
         });
     </script>
 </body>
