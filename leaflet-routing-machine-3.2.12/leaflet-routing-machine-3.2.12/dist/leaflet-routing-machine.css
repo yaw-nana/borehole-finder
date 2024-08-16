@@ -52,6 +52,7 @@
 
 .leaflet-routing-alt table {
     border-collapse: collapse;
+    font-size: 12px !important;
 }
 
 .leaflet-routing-alt tr:hover {

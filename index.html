@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.css">
     <link rel="stylesheet" href="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
     <style>
         #map {
             position: absolute;
@@ -22,7 +24,6 @@
 </head>
 <body>
     <div id="map"></div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.js"></script>
@@ -30,6 +31,7 @@
     <script src="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.js"></script>
     <script src="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <script src="Borehole.js"></script>
     <script src="Shapefile_from_Qgis/Boundary.js"></script>
 
@@ -64,7 +66,10 @@
             }
         }).addTo(map);
 
-        // Adding boreholes with hover effect
+        // Create a marker cluster group
+        var markers = L.markerClusterGroup();
+
+        // Add boreholes to the marker cluster group
         var boreholeLayer = L.geoJSON(borehole, {
             onEachFeature: function (feature, layer) {
                 var tooltipContent = feature.properties.Location + '<br>Condition: ' + feature.properties.condition;
@@ -74,10 +79,16 @@
                     layer.bindPopup(tooltipContent).openPopup();
                 });
             }
-        }).addTo(map);
+        });
+
+        // Add boreholeLayer to the marker cluster group
+        markers.addLayer(boreholeLayer);
+
+        // Add the marker cluster group to the map
+        map.addLayer(markers);
 
         var searchControl = new L.Control.Search({
-            layer: boreholeLayer,
+            layer: markers,
             propertyName: 'Location',
             zoom: 15,
             textPlaceholder: "Search for a Borehole"
@@ -135,3 +146,157 @@
     </script>
 </body>
 </html>
+
+
+ -->
+
+
+
+
+
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Borehole Finder</title>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+     <link rel="stylesheet" href="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.css">
+     <link rel="stylesheet" href="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.css">
+     <link rel="stylesheet" href="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.css">
+     <link rel="stylesheet" href="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.css">
+     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+     <style>
+         #map {
+             position: absolute;
+             top: 0;
+             right: 0;
+             bottom: 0;
+             left: 0;
+         }
+     </style>
+ </head>
+ <body>
+     <div id="map"></div>
+     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+     <script src="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.js"></script>
+     <script src="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.js"></script>
+     <script src="https://cdn.osmbuildings.org/classic/0.2.2b/OSMBuildings-Leaflet.js"></script>
+     <script src="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.js"></script>
+     <script src="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.js"></script>
+     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+     <script src="Borehole.js"></script>
+     <script src="Shapefile_from_Qgis/Boundary.js"></script>
+ 
+     <script>
+         var map = L.map('map');
+         var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+         }).addTo(map);
+ 
+         // Define the boundary layer and add it to the map
+         var boundary = L.geoJSON(boundary, {
+             style: function (feature) {
+                 return {
+                     color: '#000000',
+                     weight: 2,
+                     fillOpacity: 0
+                 };
+             }
+         }).addTo(map);
+ 
+         // Fit the map to the boundary layer
+         map.fitBounds(boundary.getBounds());
+ 
+         // Create a marker cluster group
+         var markers = L.markerClusterGroup();
+ 
+         // Add boreholes to the marker cluster group
+         var boreholeLayer = L.geoJSON(borehole, {
+             onEachFeature: function (feature, layer) {
+                 var tooltipContent = feature.properties.Location + '<br>Condition: ' + feature.properties.condition;
+                 layer.bindTooltip(tooltipContent, { permanent: false, direction: 'top' });
+ 
+                 layer.on('click', function () {
+                     layer.bindPopup(tooltipContent).openPopup();
+                 });
+             }
+         });
+ 
+         // Add boreholeLayer to the marker cluster group
+         markers.addLayer(boreholeLayer);
+ 
+         // Add the marker cluster group to the map
+         map.addLayer(markers);
+ 
+         var searchControl = new L.Control.Search({
+             layer: markers,
+             propertyName: 'Location',
+             zoom: 15,
+             textPlaceholder: "Search for a Borehole"
+         }).addTo(map);
+ 
+         L.control.navbar({ position: "topright" }).addTo(map);
+ 
+         var userLocation;
+         var searchLocation;
+ 
+         // Initialize the routing control
+         var routingControl = L.Routing.control({
+             waypoints: [],
+             routeWhileDragging: true,
+             createMarker: function(i, waypoint, n) {
+                 return L.marker(waypoint.latLng, {
+                     draggable: false,
+                     bounceOnAdd: false,
+                     bounceOnAddOptions: {
+                         duration: 1000,
+                         height: 800
+                     }
+                 });
+             },
+         }).addTo(map);
+ 
+         // Add routing control when both locations are set
+         function updateRoute() {
+             if (userLocation && searchLocation) {
+                 routingControl.setWaypoints([userLocation, searchLocation]).addTo(map);
+             } else if (userLocation) {
+                 routingControl.setWaypoints([userLocation]).addTo(map);
+             }
+         }
+ 
+         // Event handler for Locate Control
+         map.on('locationfound', function(e) {
+             userLocation = e.latlng;
+             updateRoute();
+         });
+ 
+         // Event handler for Search Control
+         searchControl.on('search:locationfound', function(e) {
+             searchLocation = e.layer.getLatLng();
+             updateRoute();
+         });
+ 
+         // Initialize locate control without auto-updating the map
+         var locateControl = L.control.locate({
+             setView: false, // Prevent automatic centering on user location
+             keepCurrentZoomLevel: true,
+             drawCircle: false,
+             locateOptions: {
+                 maxZoom: 15,
+                 enableHighAccuracy: true
+             }
+         }).addTo(map);
+ 
+         // Start locating the user when Locate Control is clicked
+         locateControl.on('startactive', function() {
+             map.locate({setView: false, maxZoom: 15}); // Do not set view automatically
+         });
+     </script>
+ </body>
+ </html>
+ 
