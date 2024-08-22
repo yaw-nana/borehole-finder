@@ -37,12 +37,11 @@
 
     <script>
         var map = L.map('map', {
-            zoomControl: true, // Enable zoom controls
-            dragging: true, // Enable dragging
-            scrollWheelZoom: true, // Allow zooming with scroll wheel
-            boxZoom: false, // Disable box zoom
-            doubleClickZoom: true, // Allow double-click zooming
-            // Remove inertia, which might cause the map to pan unexpectedly
+            zoomControl: true,
+            dragging: true,
+            scrollWheelZoom: true,
+            boxZoom: false,
+            doubleClickZoom: true,
             inertia: false 
         });
 
@@ -50,7 +49,6 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Define the boundary layer and add it to the map
         var boundary = L.geoJSON(boundary, {
             style: function (feature) {
                 return {
@@ -61,13 +59,10 @@
             }
         }).addTo(map);
 
-        // Fit the map to the boundary layer initially
         map.fitBounds(boundary.getBounds());
 
-        // Create a marker cluster group
         var markers = L.markerClusterGroup();
 
-        // Add boreholes to the marker cluster group
         var boreholeLayer = L.geoJSON(borehole, {
             onEachFeature: function (feature, layer) {
                 var tooltipContent = feature.properties.Location + '<br>Condition: ' + feature.properties.condition;
@@ -79,16 +74,13 @@
             }
         });
 
-        // Add boreholeLayer to the marker cluster group
         markers.addLayer(boreholeLayer);
-
-        // Add the marker cluster group to the map
         map.addLayer(markers);
 
         var searchControl = new L.Control.Search({
             layer: markers,
             propertyName: 'Location',
-            zoom: false, // Do not change the zoom level on search
+            zoom: true, // Enable zooming to the location
             textPlaceholder: "Search for a Borehole"
         }).addTo(map);
 
@@ -97,10 +89,9 @@
         var userLocation;
         var searchLocation;
 
-        // Initialize the routing control
         var routingControl = L.Routing.control({
             waypoints: [],
-            routeWhileDragging: false, // Disable auto-updating the route
+            routeWhileDragging: false,
             createMarker: function(i, waypoint, n) {
                 return L.marker(waypoint.latLng, {
                     draggable: false,
@@ -113,7 +104,6 @@
             }
         }).addTo(map);
 
-        // Function to update the route
         function updateRoute() {
             if (userLocation && searchLocation) {
                 routingControl.setWaypoints([userLocation, searchLocation]);
@@ -122,23 +112,19 @@
             }
         }
 
-        // Event handler for Locate Control
         map.on('locationfound', function(e) {
             userLocation = e.latlng;
             updateRoute();
-            // Do not change the map view when location is found
         });
 
-        // Event handler for Search Control
         searchControl.on('search:locationfound', function(e) {
             searchLocation = e.layer.getLatLng();
             updateRoute();
-            // Do not change the map view or zoom level
+            map.setView(searchLocation, 15); // Zoom to the location of the searched borehole
         });
 
-        // Initialize locate control without auto-updating the map
         var locateControl = L.control.locate({
-            setView: false, // Prevent automatic centering on user location
+            setView: false,
             keepCurrentZoomLevel: true,
             drawCircle: false,
             locateOptions: {
@@ -147,15 +133,14 @@
             }
         }).addTo(map);
 
-        // Prevent multiple location requests
         var locating = false;
 
         locateControl.on('startactive', function() {
             if (!locating) {
                 locating = true;
-                map.locate({setView: false, maxZoom: 15}); // Do not set view automatically
+                map.locate({setView: false, maxZoom: 15});
                 setTimeout(function() {
-                    locating = false; // Allow locating again after 10 seconds
+                    locating = false;
                 }, 10000);
             }
         });
