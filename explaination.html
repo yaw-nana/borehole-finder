@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.css">
     <link rel="stylesheet" href="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
     <style>
         #map {
             position: absolute;
@@ -19,18 +21,53 @@
             left: 0;
         }
 
-        /* CSS for smaller screens */
-        @media (max-width: 768px) {
-            .leaflet-top.leaflet-right {
-                transform: scale(0.8); /* Adjust scale as needed */
-                transform-origin: top right; /* Keeps the top-right positioning */
-            }
+        /* Styling for the draggable routing panel */
+        #routingPanel {
+            position: fixed;
+            bottom: 20px; /* Space from the bottom */
+            left: 50%;
+            transform: translateX(-50%); /* Center horizontally */
+            width: 80%; /* Adjust width as needed */
+            max-width: 800px; /* Optional: limit max width */
+            background: white;
+            border-top: 2px solid #ddd;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000; /* Ensure it's above other elements */
+            height: 200px; /* Default height of the panel */
+            overflow: hidden; /* Hide any overflow */
+            transition: height 0.3s ease, visibility 0.3s ease;
+            visibility: visible;
+        }
+
+        #routingPanelHeader {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            user-select: none; /* Prevent text selection while dragging */
+        }
+
+        #routingPanelContent {
+            padding: 10px;
+            height: calc(100% - 40px); /* Adjust content area height */
+            overflow: auto;
+        }
+
+        /* Adjust z-index for other controls */
+        .leaflet-control {
+            z-index: 1001; /* Ensure they are above the routing panel */
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
-
+    <div id="routingPanel">
+        <div id="routingPanelHeader">Drag to Expand</div>
+        <div id="routingPanelContent">
+            <!-- Routing control will be dynamically inserted here -->
+        </div>
+    </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="leaflet-routing-machine-3.2.12/leaflet-routing-machine-3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="leaflet-locatecontrol-gh-pages/dist/L.Control.Locate.min.js"></script>
@@ -38,6 +75,7 @@
     <script src="Leaflet.NavBar-master/Leaflet.NavBar-master/src/Leaflet.NavBar.js"></script>
     <script src="leaflet-search-master/leaflet-search-master/dist/leaflet-search.src.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <script src="Borehole.js"></script>
     <script src="Shapefile_from_Qgis/Boundary.js"></script>
 
@@ -61,18 +99,10 @@
         // Fit the map to the boundary layer
         map.fitBounds(boundary.getBounds());
 
-        // Locate control
-        var locateControl = L.control.locate({
-            setView: 'always',
-            keepCurrentZoomLevel: true,
-            drawCircle: false,
-            locateOptions: {
-                maxZoom: 15,
-                enableHighAccuracy: true
-            }
-        }).addTo(map);
+        // Create a marker cluster group
+        var markers = L.markerClusterGroup();
 
-        // Adding boreholes with hover effect
+        // Add boreholes to the marker cluster group
         var boreholeLayer = L.geoJSON(borehole, {
             onEachFeature: function (feature, layer) {
                 var tooltipContent = feature.properties.Location + '<br>Condition: ' + feature.properties.condition;
@@ -82,10 +112,16 @@
                     layer.bindPopup(tooltipContent).openPopup();
                 });
             }
-        }).addTo(map);
+        });
+
+        // Add boreholeLayer to the marker cluster group
+        markers.addLayer(boreholeLayer);
+
+        // Add the marker cluster group to the map
+        map.addLayer(markers);
 
         var searchControl = new L.Control.Search({
-            layer: boreholeLayer,
+            layer: markers,
             propertyName: 'Location',
             zoom: 15,
             textPlaceholder: "Search for a Borehole"
@@ -106,21 +142,21 @@
                     bounceOnAdd: false,
                     bounceOnAddOptions: {
                         duration: 1000,
-                        height: 800,
-                        function() {
-                            (bindPopup(myPopup).openOn(map))
-                        }
+                        height: 800
                     }
                 });
             },
         }).addTo(map);
 
-        // Add routing control when both locations are set
+        // Append the routing control to the container
+        document.getElementById('routingPanelContent').appendChild(routingControl.getContainer());
+
+        // Update the route without re-adding the routing control
         function updateRoute() {
             if (userLocation && searchLocation) {
-                routingControl.setWaypoints([userLocation, searchLocation]).addTo(map);
+                routingControl.setWaypoints([userLocation, searchLocation]);
             } else if (userLocation) {
-                routingControl.setWaypoints([userLocation]).addTo(map);
+                routingControl.setWaypoints([userLocation]);
             }
         }
 
@@ -136,10 +172,65 @@
             updateRoute();
         });
 
+        // Initialize locate control without auto-updating the map
+        var locateControl = L.control.locate({
+            setView: false, // Prevent automatic centering on user location
+            keepCurrentZoomLevel: true,
+            drawCircle: false,
+            locateOptions: {
+                maxZoom: 15,
+                enableHighAccuracy: true
+            }
+        }).addTo(map);
+
         // Start locating the user when Locate Control is clicked
         locateControl.on('startactive', function() {
-            map.locate({setView: true, maxZoom: 15});
+            map.locate({setView: false, maxZoom: 15}); // Do not set view automatically
         });
+
+        // Drag to expand the routing panel
+        var panel = document.getElementById('routingPanel');
+        var header = document.getElementById('routingPanelHeader');
+        var isDragging = false;
+        var startY;
+
+        // Toggle panel visibility on header click
+        var isPanelVisible = true;
+
+        header.addEventListener('click', function(e) {
+            if (!isDragging) {
+                isPanelVisible = !isPanelVisible;
+                panel.style.height = isPanelVisible ? '200px' : '0';
+                panel.style.visibility = isPanelVisible ? 'visible' : 'hidden';
+                panel.style.overflow = isPanelVisible ? 'hidden' : 'visible'; // Adjust overflow
+            }
+        });
+
+        header.addEventListener('mousedown', function(e) {
+            if (!isDragging) {
+                isDragging = true;
+                startY = e.clientY;
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', onStopDrag);
+            }
+        });
+
+        // Function to handle the drag event
+        function onDrag(e) {
+            if (isDragging) {
+                var offsetY = e.clientY - startY;
+                var newHeight = Math.min(window.innerHeight, Math.max(100, window.innerHeight - offsetY));
+                panel.style.height = newHeight + 'px';
+                panel.style.bottom = '10px'; // Adjust if needed
+            }
+        }
+
+        // Function to stop dragging
+        function onStopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', onStopDrag);
+        }
     </script>
 </body>
 </html>
